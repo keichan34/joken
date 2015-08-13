@@ -24,7 +24,7 @@ defmodule Joken.Token do
 
     {status, payloadJSON} = get_payload_json(payload, claims, joken_config)
 
-    {override_secret_key, options} = Dict.pop(options, :secret_key, false)
+    {override_secret_key, _} = Dict.pop(options, :secret_key, false)
 
     case status do
       :error ->
@@ -67,7 +67,7 @@ defmodule Joken.Token do
     claims = @claims -- skip_options
 
     {skip_verify, options} = Dict.pop options, :skip_verify, false
-    {override_secret_key, options} = Dict.pop options, :secret_key, false
+    {override_secret_key, _} = Dict.pop options, :secret_key, false
     {status, result} = verify_signature(token, get_secret_key(joken_config, override_secret_key), joken_config.algorithm, skip_verify)
 
     case status do
@@ -130,7 +130,7 @@ defmodule Joken.Token do
     {:ok, joken_config.decode(data) }
   end
 
-  defp get_secret_key(joken_config, override \\ false) do
+  defp get_secret_key(joken_config, override) do
     secret_key = override || joken_config.secret_key
     case secret_key do
       iodata when is_binary(iodata) or is_list(iodata) ->
