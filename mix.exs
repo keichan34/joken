@@ -17,12 +17,12 @@ defmodule Joken.Mixfile do
   defp deps do
     [
       {:jose, "~> 1.1"},
-      {:plug, "~> 0.14", optional: true},
+      {:plug, "~> 0.14"},
       {:earmark, "~> 0.1", only: :docs},
       {:ex_doc, "~> 0.7", only: :docs},
       {:poison, "~> 1.4", only: :test},
       {:jsx, "~> 2.0", only: :test},
-      {:benchfella, "~> 0.2", only: :test}      
+      {:benchfella, "~> 0.2", only: :test}
     ]
   end
 
