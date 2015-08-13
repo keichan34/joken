@@ -9,7 +9,7 @@ defmodule Joken.Token do
   """
 
   @spec encode(module, Joken.payload) :: {Joken.status, binary}
-  def encode(joken_config, payload) do
+  def encode(joken_config, payload, options \\ []) do
     headerJSON = joken_config.encode(%{ alg: to_string(joken_config.algorithm), typ: :JWT })
 
     claims = Enum.reduce(@claims, %{}, fn(claim, current_claims) ->
@@ -23,6 +23,8 @@ defmodule Joken.Token do
     end)
 
     {status, payloadJSON} = get_payload_json(payload, claims, joken_config)
+
+    {override_secret_key, options} = Dict.pop(options, :secret_key, false)
 
     case status do
       :error ->
@@ -38,7 +40,7 @@ defmodule Joken.Token do
           :error ->
             {:error, "Unsupported algorithm"}
           :ok ->
-            jwk = get_secret_key(joken_config)
+            jwk = get_secret_key(joken_config, override_secret_key)
             {:ok, :erlang.element(2, JOSE.JWS.compact(JOSE.JWK.sign(payloadJSON, jws, jwk)))}
         end
     end
@@ -64,8 +66,9 @@ defmodule Joken.Token do
     
     claims = @claims -- skip_options
 
-    {skip_verify, _} = Dict.pop options, :skip_verify, false
-    {status, result} = verify_signature(token, get_secret_key(joken_config), joken_config.algorithm, skip_verify)
+    {skip_verify, options} = Dict.pop options, :skip_verify, false
+    {override_secret_key, options} = Dict.pop options, :secret_key, false
+    {status, result} = verify_signature(token, get_secret_key(joken_config, override_secret_key), joken_config.algorithm, skip_verify)
 
     case status do
       :error ->
@@ -127,8 +130,9 @@ defmodule Joken.Token do
     {:ok, joken_config.decode(data) }
   end
 
-  defp get_secret_key(joken_config) do
-    case joken_config.secret_key do
+  defp get_secret_key(joken_config, override \\ false) do
+    secret_key = override || joken_config.secret_key
+    case secret_key do
       iodata when is_binary(iodata) or is_list(iodata) ->
         JOSE.JWK.from_map(%{
           "kty" => "oct",

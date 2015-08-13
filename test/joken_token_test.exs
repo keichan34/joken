@@ -652,6 +652,13 @@ defmodule Joken.Token.Test do
 
   end
 
+  test "override signature secret key (JSX)" do
+    {:ok, token} = Joken.Token.encode(@jsx_json_module, @payload, secret_key: "adifferentsecret")
+    assert(token == "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiSm9obiBEb2UifQ.12ERE_ujtf7xTTf2RXLzzXhkhyRa26hF_GmQXdJta7c")
+    {:ok, decoded_payload} = Joken.Token.decode(@jsx_json_module, token, secret_key: "adifferentsecret")
+    assert(@payload == decoded_payload)
+  end
+
   test "expiration (exp)" do
     defmodule ExpSuccessTest do
       use BaseConfig
